@@ -1,0 +1,119 @@
+int end_trial = 0;
+int wasCorrect = 0;
+int n_responses = 0;
+
+int p_thresh = 3000;
+int p_step = 200;
+int p_repeats = 0;
+int p_stepMin = 1;
+int p_stepMax = 400;
+int p_valMin = 1500;
+int p_valMax = 4500;
+int p_doubled = 0;
+int p_threshMin = 1500;
+int p_threshMax = 4500;
+
+output_file ofile1 = new output_file;
+
+sub
+	targout
+begin
+	ofile1.open_append("PESTtestlog.txt");
+	ofile1.print(n_responses);
+	ofile1.print(",");
+	ofile1.print(wasCorrect);
+	ofile1.print(",");
+	ofile1.print(p_thresh);
+	ofile1.print(",");
+	ofile1.print(p_step);
+	ofile1.print(",");
+	ofile1.print(p_repeats);
+	ofile1.print(",");
+	ofile1.print(p_doubled);
+	ofile1.print("\n");
+	ofile1.close();
+end;
+
+loop
+until
+	end_trial == 1
+begin
+t_text.set_caption( "Threshold = " + string( p_thresh ) );
+  t_text.redraw();
+	start_pesting.present();
+if response_manager.response_data_count() > n_responses then
+	n_responses = response_manager.response_data_count();
+	wasCorrect = response_manager.last_response();
+end;
+
+	if wasCorrect == 1 then
+		if p_repeats == 0 then
+			p_repeats = 2;
+		else
+			p_repeats = p_repeats + 1;
+			end;
+		if p_repeats <= 0 && p_doubled == 0 then
+			p_repeats = 2; #Reversal, NOT after a doubling.
+			p_step = p_step / 2;
+		elseif p_repeats <= 0 && p_doubled == 1 then
+			p_repeats = 1; #Reversal, after a doubling.
+			p_step = p_step / 2;
+			end;
+		if p_repeats >= 4 then
+			p_step = p_step * 2;
+			p_doubled = 1;
+		elseif p_repeats < 4 then
+			p_doubled = 0;
+			end;
+		if p_step < p_stepMin then
+			p_step = p_stepMin;
+			end;
+		if p_step > p_stepMax then
+			p_step = p_stepMax;
+			end;
+		p_thresh = p_thresh - p_step;
+
+#If the participant got the trial incorrect, do the following
+
+	elseif wasCorrect == 2 then
+		if p_repeats == 0 then
+			p_repeats = -2;
+		else
+			p_repeats = p_repeats-1;
+		end;
+		if p_repeats >= 0 && p_doubled == 0 then
+			p_repeats = -2; #REVERSAL! NOT AFTER A DOUBLING
+			p_step = p_step / 2;
+		elseif p_repeats >= 0 && p_doubled == 1 then
+			p_repeats = -1; #REVERSAL! AFTER A DOUBLING!
+			p_step = p_step / 2;
+		end;
+		if p_repeats <= -4 then
+			p_step = p_step*2;
+			p_doubled = 1;
+		elseif p_repeats > -4 then
+			p_doubled = 0;
+		end;
+		if p_step < p_stepMin then
+			p_step = p_stepMin;
+		end;
+		if p_step > p_stepMax then
+			p_step = p_stepMax;
+		end;
+		p_thresh = p_thresh + p_step;
+	else
+		term.print("Ending Threshold = " + string(p_thresh) + " after " + string(n_responses) + "trials.");
+		end_trial = 1;
+	end;
+
+	if p_thresh < p_threshMin then
+		p_thresh = p_threshMin;
+	end;
+	if p_thresh > p_threshMax then
+		p_thresh = p_threshMax;
+	end;
+	term.print("Correct = " + string(wasCorrect) + "Threshold = " + string(p_thresh));
+
+	targout();
+end;
+ofile1.close();
