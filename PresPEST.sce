@@ -6,7 +6,7 @@ active_buttons = 3;
 button_codes = 5, 2, 100; #1, 5, or Enter.
 response_logging = log_all;
 
-pcl_file = "mystaircase.pcl";
+pcl_file = "PresPEST.pcl";
 
 begin;
 
